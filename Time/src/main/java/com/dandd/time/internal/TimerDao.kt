@@ -16,7 +16,7 @@ interface TimerDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun setTimer(timer: TimerEntity): Long
 
-    @Delete
+    @Query("Delete FROM TimerEntity WHERE timerId = :timerId")
     suspend fun removeTimer(timerId: String): Int
 
     @Update
