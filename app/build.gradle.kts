@@ -4,12 +4,12 @@ plugins {
 }
 
 android {
-    namespace = "com.Dandd.timesdk"
+    namespace = "com.dandd.timesdk"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.Dandd.timesdk"
-        minSdk = 24
+        applicationId = "com.dandd.timesdk"
+        minSdk = 34
         targetSdk = 34
         versionCode = 1
         versionName = "1.0"
@@ -27,6 +27,9 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            kotlinOptions {
+                freeCompilerArgs = listOf("-Xdebug")
+            }
         }
     }
     compileOptions {
@@ -66,4 +69,5 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+    implementation(project(":Time"))
 }
