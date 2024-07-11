@@ -1,4 +1,4 @@
-package com.dandd.time.internal
+package com.dandd.time.internal.Database
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -12,15 +12,15 @@ import com.dandd.time.domain.model.TimerEntity
 //this is your interface, the interface that decides how you interact with the database
 //The FavoriteRoomDatabase inherits this
 @Dao
-interface TimerDao {
+internal interface TimerDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun setTimer(timer: TimerEntity): Long
 
     @Delete
-    suspend fun removeTimer(timerId: String): Int
+    suspend fun removeTimer(timer: TimerEntity): Int
 
-    @Update
-    suspend fun updateTimer(timer: TimerEntity): Int
+    @Query("UPDATE TimerEntity SET remainingTime = :remainingTime, status = :isActive WHERE timerId = :timerId")
+    suspend fun updateTimer(remainingTime: Float, timerId: String, isActive: Int): Int
 
     @Query("Select * FROM timerEntity")
     suspend fun getAllTimers(): List<TimerEntity>

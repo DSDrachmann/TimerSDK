@@ -1,4 +1,4 @@
-package com.Dandd.timesdk
+package com.dandd.timesdk
 
 import org.junit.Test
 

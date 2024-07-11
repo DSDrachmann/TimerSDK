@@ -1,32 +1,178 @@
-package com.Dandd.timesdk
+package com.dandd.timesdk
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.Dandd.timesdk.ui.theme.TimeSDKTheme
+import com.dandd.time.domain.TimerProvider
+import com.dandd.time.domain.model.TimerStatus
+import com.dandd.time.internal.Permissions.PermissionLogic
+import com.dandd.time.internal.notificationActivity.NotificationLogic
+import com.dandd.timesdk.ui.theme.TimeSDKTheme
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class MainActivity : ComponentActivity() {
+    private val timerProvider by lazy { TimerProvider(context = this@MainActivity) }
+    private val timerFunc by lazy { timerProvider.getTimerFunc() }
+    private val timerDatabase by lazy { timerProvider.getTimerDB() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
         setContent {
+            val triggerNotificationPermissionEffect = remember { mutableStateOf(false) }
+            val triggerSetAlarmEffect = remember { mutableStateOf(false) }
+            val triggerRequestAlarmPermissionEffect = remember { mutableStateOf(false) }
+            val triggerPauseTimerEffect = remember { mutableStateOf(false) }
+            val triggerReactivateAlarmEffect = remember { mutableStateOf(false) }
+            val triggerCancelAlarmEffect = remember { mutableStateOf(false) }
+
             TimeSDKTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     Greeting(
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
+                    Greeting(name = "Android", modifier = Modifier.padding(innerPadding))
+                    Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Button(onClick = { triggerNotificationPermissionEffect.value = !triggerNotificationPermissionEffect.value }) {
+                                Text(text = "Allow notifications")
+                            }
+                            Button(onClick = { triggerRequestAlarmPermissionEffect.value = !triggerRequestAlarmPermissionEffect.value }) {
+                                Text(text = "request alarm permission")
+                            }
+                            Button(onClick = { triggerSetAlarmEffect.value = !triggerSetAlarmEffect.value }) {
+                                Text(text = "Set an alarm")
+                            }
+                            Button(onClick = { triggerPauseTimerEffect.value = !triggerPauseTimerEffect.value }) {
+                                Text(text = "Pause the alarm")
+                            }
+                            Button(onClick = { triggerReactivateAlarmEffect.value = !triggerReactivateAlarmEffect.value }) {
+                                Text(text = "Reactivate the alarm")
+                            }
+                            Button(onClick = { triggerCancelAlarmEffect.value = !triggerCancelAlarmEffect.value }) {
+                                Text(text = "Cancel the alarm")
+                            }
+
+                            if (triggerNotificationPermissionEffect.value) {
+                                LaunchedEffect(triggerNotificationPermissionEffect.value) {
+                                    NotificationLogic().checkForPermissions(context = this@MainActivity)
+                                    // Additional operations can be performed here as needed
+                                }
+                            }
+                            if (triggerSetAlarmEffect.value) {
+                                LaunchedEffect(triggerSetAlarmEffect.value) {
+                                    if(PermissionLogic().checkAlarmPermission(context = this@MainActivity))
+                                    {
+
+                                        val currentTime = giveMeCurrentTime()
+                                        val currentTimeInStringFormat = setUpCurrentTimeForAlarm()
+
+                                        val list = timerDatabase.getAllTimers()
+                                        timerDatabase.removeAllTimers()
+
+                                        timerFunc.createTimer(
+                                            initialTimerTime = currentTimeInStringFormat,
+                                            context = this@MainActivity
+                                        )
+                                    } else {
+                                        Toast.makeText(this@MainActivity, "Request alarm permission", Toast.LENGTH_SHORT).show()
+                                    }
+                                    // Additional operations can be performed here as needed
+                                }
+                            }
+                            if(triggerRequestAlarmPermissionEffect.value) {
+                                LaunchedEffect(triggerRequestAlarmPermissionEffect.value) {
+                                    PermissionLogic().requestAlarmPermission(context = this@MainActivity)
+                                }
+                            }
+                            if(triggerPauseTimerEffect.value) {
+                                LaunchedEffect(triggerPauseTimerEffect.value) {
+                                    val timers = timerDatabase.getAllTimers().filter { it.status == TimerStatus.ACTIVE.rawValue }
+                                    timers.forEach {
+                                        timerFunc.pauseTimer(context = this@MainActivity, timerEntity = it)
+                                    }
+                                }
+                            }
+                            if(triggerReactivateAlarmEffect.value) {
+                                LaunchedEffect(triggerReactivateAlarmEffect.value) {
+                                    val timers = timerDatabase.getAllTimers().filter { it.status == TimerStatus.PAUSED.rawValue }
+                                    timers.forEach {
+                                        timerFunc.reActivateTimer(context = this@MainActivity, it)
+                                    }
+                                }
+                            }
+                            if(triggerCancelAlarmEffect.value) {
+                                LaunchedEffect(triggerCancelAlarmEffect.value) {
+                                    val timers = timerDatabase.getAllTimers().filter { it.status != TimerStatus.INACTIVE.rawValue }
+                                    timers.forEach {
+                                        timerFunc.cancelTimer(context = this@MainActivity, it)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+    }
+
+    override fun onPause() {
+        super.onPause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+    }
+
+    override fun onRestart() {
+        super.onRestart()
+    }
+
+    private fun updateAlarmsInDatabase() {
+
+    }
+
+    private fun giveMeCurrentTime(): String{
+        val currentTime = Date()
+        val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.ENGLISH)
+        val currentTimeInStringFormat = dateFormat.format(currentTime)
+        return currentTimeInStringFormat
+    }
+
+    private fun setUpCurrentTimeForAlarm(): String {
+        var currentTime = Date()
+        val calendar = Calendar.getInstance()
+        calendar.time = currentTime
+        calendar.add(Calendar.SECOND, 50)
+        currentTime = calendar.time
+        val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.ENGLISH)
+        val currentTimeInStringFormat = dateFormat.format(currentTime)
+        return currentTimeInStringFormat
     }
 }
 
