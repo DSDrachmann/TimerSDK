@@ -2,12 +2,11 @@ package com.dandd.time.domain.model
 
 import androidx.room.Entity
 
-@Entity (primaryKeys = ["timerId", "initialValue", "remainingTime"])
+@Entity (primaryKeys = ["timerId"])
 data class TimerEntity (
     val timerId: String,
-    //initialValue is for UI
     val initialValue: Float,
-    //remainingTime is for UI and for the AlarmManager
     val remainingTime: Float,
-    val accountName: String?
+    val accountName: String?,
+    val status: Int = 0
 )
