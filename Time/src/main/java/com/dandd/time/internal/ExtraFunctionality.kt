@@ -18,7 +18,14 @@ import java.util.Date
 import com.dandd.time.internal.alarmManagerListeners.TimerExpiredReceiver
 import com.dandd.time.internal.Database.TimerDatabaseRepository
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Locale
+import java.util.Timer
 
 internal class ExtraFunctionality(
     private val timerDatabaseAccess: TimerDatabaseRepository
@@ -49,27 +56,36 @@ internal class ExtraFunctionality(
      * @return The timer entity created.
      */
     override suspend fun createTimer(initialTimerTime: String, accountName: String?, context: Context) : TimerEntity {
-        val timer = TimerEntity(
+        val timerForDatabase = TimerEntity(
             timerId = generateTimerId(),
             initialValue = convertHHMMSSToSeconds(initialTimerTime),
             remainingTime = convertHHMMSSToSeconds(initialTimerTime),
+            initialDateForSettingTimerInEpoch = getEpochTime(),
             accountName = accountName,
             status = TimerStatus.ACTIVE.rawValue
         )
 
-        val pendingIntent = getPendingIntent(context, timer)
-        setAlarmInAlarmManager(context, timer, pendingIntent)
-        timerDatabaseAccess.insertTimerEntity(timer)
-        return timer
+        val epochTime = timerForDatabase.initialDateForSettingTimerInEpoch
+        val timeForAlarmManager = epochTime + (timerForDatabase.initialValue * 1000)
+
+        val pendingIntent = getPendingIntent(context, timerForDatabase)
+        setAlarmInAlarmManager(context, timeForAlarmManager, pendingIntent)
+        timerDatabaseAccess.insertTimerEntity(timerForDatabase)
+        return timerForDatabase
     }
 
     override suspend fun reActivateTimer(context: Context, timerEntity: TimerEntity) {
-        val updatedTimerEntity: TimerEntity = timerEntity.copy(
+
+        //get the current time in epoch (maybe i can use this when i also pause a timer.
+        val currentEpochTime = getEpochTime()
+        val nextEpochTimerForAlarmManager = currentEpochTime + (timerEntity.remainingTime*1000)
+        val updatedTimerForDatabase: TimerEntity = timerEntity.copy(
             status = TimerStatus.ACTIVE.rawValue
         )
-        val pendingIntent = getPendingIntent(context, updatedTimerEntity)
-        setAlarmInAlarmManager(context, updatedTimerEntity, pendingIntent)
-        timerDatabaseAccess.updateTimer(updatedTimerEntity)
+
+        val pendingIntent = getPendingIntent(context, timerEntity)
+        setAlarmInAlarmManager(context, nextEpochTimerForAlarmManager, pendingIntent)
+        timerDatabaseAccess.updateTimer(updatedTimerForDatabase)
     }
 
     override suspend fun pauseTimer(context: Context, timerEntity: TimerEntity) {
@@ -78,16 +94,13 @@ internal class ExtraFunctionality(
         val pendingIntent = getPendingIntent(context, timerEntity)
         cancelAlarmInAlarmManager(alarmManager, pendingIntent)
 
-        val currentTime = setUpCurrentTimeForAlarm()
-        val remainingTime = timerEntity.remainingTime - convertHHMMSSToSeconds(currentTime)
+        val newRemainingTimeForEntity = getNewTimeForUpdateField(timerEntity)
         val updatedTimerEntity: TimerEntity = timerEntity.copy(
-            remainingTime = remainingTime,
+            remainingTime = newRemainingTimeForEntity,
             status = TimerStatus.PAUSED.rawValue
         )
 
-        // remove the alarm from the database
         timerDatabaseAccess.updateTimer(updatedTimerEntity)
-        print("")
     }
 
     private fun setUpCurrentTimeForAlarm(): String {
@@ -104,14 +117,13 @@ internal class ExtraFunctionality(
         val updatedTimerEntity: TimerEntity = timerEntity.copy(
             remainingTime = timerEntity.initialValue, status = TimerStatus.INACTIVE.rawValue
         )
-        // val updatedTimerEntity = timerEntity.copy(remainingTime = timerEntity.initialValue, isActive = 0)
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
 
         val pendingIntent = getPendingIntent(context, updatedTimerEntity)
 
         // Cancel the alarm
         cancelAlarmInAlarmManager(alarmManager, pendingIntent)
-        // remove the alarm from the database
+        // update the status of the entity in the database.
         timerDatabaseAccess.updateTimer(updatedTimerEntity)
     }
 
@@ -129,21 +141,30 @@ internal class ExtraFunctionality(
         return UUID.randomUUID().toString()
     }
 
+    suspend fun deleteTimer(context: Context, timerEntity: TimerEntity) {
+        cancelTimer(context, timerEntity)
+        timerDatabaseAccess.removeTimer(timerEntity)
+    }
+
+    suspend fun deleteAllTimers(context: Context) {
+        val allTimers = timerDatabaseAccess.getAllTimers()
+        allTimers.forEach {
+            cancelTimer(context, it)
+        }
+        timerDatabaseAccess.removeAllTimers()
+    }
 
     private fun setAlarmInAlarmManager(
         context: Context,
-        timer: TimerEntity,
+        timeForAlarmManager: Long,
         pendingIntent: PendingIntent
     ) {
         //get the alarmManager
         val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
 
-        val time =(System.currentTimeMillis() + timer.remainingTime).toLong()
-
-        //set the alarm using the setExactAndAllowWhileIdle option
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
-            time,
+            timeForAlarmManager,
             pendingIntent
         )
     }
@@ -157,11 +178,92 @@ internal class ExtraFunctionality(
         return pendingIntent
     }
 
-    private fun convertHHMMSSToSeconds(hhmmss: String): Float {
+    private fun getEpochTime(): Long {
+        val now = LocalDateTime.now()
+        // Convert the current LocalDateTime to epoch milliseconds
+        val epochMillis = now.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        return epochMillis
+    }
+
+    private fun convertFloatToEpoch(longTimeToBeConverted: Long): Long {
+        // Step 0: Convert the float to HH:mm:ss format
+        val totalSeconds = longTimeToBeConverted.toLong()
+        val hours = (totalSeconds / 3600).toInt()
+        val minutes = ((totalSeconds % 3600) / 60).toInt()
+        val seconds = (totalSeconds % 60).toInt()
+        val timeString = String.format(locale = Locale.UK,"%02d:%02d:%02d", hours, minutes, seconds)
+
+        // Step 1: Parse the time string to a LocalTime object
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+        val localTime = LocalTime.parse(timeString, timeFormatter)
+
+        // Step 2: Combine LocalTime with today's date to get a LocalDateTime object
+        val todayDate = LocalDate.now()
+        val localDateTime = LocalDateTime.of(todayDate, localTime)
+
+        // Step 3: Convert LocalDateTime to ZonedDateTime using the desired time zone (e.g., Europe/Copenhagen)
+        val zoneId = ZoneId.of("Europe/Copenhagen")
+        val zonedDateTime = ZonedDateTime.of(localDateTime, zoneId)
+
+        // Step 4: Convert ZonedDateTime to epoch time (milliseconds since Unix epoch)
+        val epochMillis = zonedDateTime.toInstant().toEpochMilli()
+
+        return epochMillis
+    }
+
+    private fun convertHHMMSSToSeconds(hhmmss: String): Long {
         val hhmmssList = hhmmss.split(":")
-        val hours = hhmmssList[0].toFloat()
-        val minutes = hhmmssList[1].toFloat()
-        val seconds = hhmmssList[2].toFloat()
-        return hours * 3600 + minutes * 60 + seconds
+        val hours = hhmmssList[0].toLong()
+        val minutes = hhmmssList[1].toLong()
+        val seconds = hhmmssList[2].toLong()
+        val result = hours * 3600 + minutes * 60 + seconds
+        return result
+    }
+
+    suspend fun shutDownOrDestroy(context: Context) {
+        val timers = timerDatabaseAccess.getAllTimers().filter { it.status == TimerStatus.ACTIVE.rawValue }
+        timers.forEach {
+
+            //TODO figure out what to do here..
+            //do i want to change the remainingTime?
+            //what happens on the app being resumed versus the phone
+            // being rebooted in terms of updating UI or rescheduling alarms
+
+
+        }
+    }
+
+    private suspend fun updateTimer(context: Context) {
+        val activeTimersToBeUpdated = timerDatabaseAccess.getAllTimers().filter { it.status == TimerStatus.ACTIVE.rawValue }
+        activeTimersToBeUpdated.forEach {
+            val remainingTime = getNewTimeForUpdateField(it)
+            val updatedTimerEntity: TimerEntity = it.copy(
+                remainingTime = remainingTime,
+            )
+            timerDatabaseAccess.updateTimer(updatedTimerEntity)
+        }
+    }
+
+    suspend fun goIntoBackground(context: Context) {
+
+    }
+
+    private fun getNewTimeForUpdateField(timer: TimerEntity): Long {
+        //GETS THE CURRENT TIME
+        val currentTime = setUpCurrentTimeForAlarm()
+        //converts that into seconds
+        val currentTimeInSeconds = convertHHMMSSToSeconds(currentTime)
+        //converts seconds into epoch based on todays date (so epoch for today)
+        val timeinEpoch = convertFloatToEpoch(currentTimeInSeconds)
+
+        //subtracts the timeInEpoch of today from our initial time in Epoch and gets the passed time
+        //since the timer was activated
+        val timePassedForTimer = timeinEpoch - timer.initialDateForSettingTimerInEpoch
+
+        //subtracts the passed time in seconds from the initial value and gets the remaining time
+        //that is left before the timer expires
+        val remainingTimeForReal = timer.initialValue - (timePassedForTimer/1000)
+
+        return remainingTimeForReal
     }
 }
