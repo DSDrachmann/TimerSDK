@@ -25,6 +25,9 @@ import com.dandd.time.internal.Permissions.PermissionLogic
 import com.dandd.time.internal.notificationActivity.NotificationLogic
 import com.dandd.timesdk.ui.theme.TimeSDKTheme
 import java.text.SimpleDateFormat
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
@@ -45,9 +48,12 @@ class MainActivity : ComponentActivity() {
             val triggerPauseTimerEffect = remember { mutableStateOf(false) }
             val triggerReactivateAlarmEffect = remember { mutableStateOf(false) }
             val triggerCancelAlarmEffect = remember { mutableStateOf(false) }
+            val triggerDeleteAlarmEffect = remember { mutableStateOf(false) }
+            val triggerGetTimersEffect = remember { mutableStateOf(false) }
 
             TimeSDKTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+
                     Greeting(
                         name = "Android",
                         modifier = Modifier.padding(innerPadding)
@@ -73,10 +79,34 @@ class MainActivity : ComponentActivity() {
                             Button(onClick = { triggerCancelAlarmEffect.value = !triggerCancelAlarmEffect.value }) {
                                 Text(text = "Cancel the alarm")
                             }
+                            Button(onClick = { triggerDeleteAlarmEffect.value = !triggerDeleteAlarmEffect.value }) {
+                                Text(text = "Delete all alarms")
+                            }
+                            Button(onClick = { triggerGetTimersEffect.value = !triggerGetTimersEffect.value }) {
+                                Text(text = "Get all alarms")
+                            }
+
 
                             if (triggerNotificationPermissionEffect.value) {
                                 LaunchedEffect(triggerNotificationPermissionEffect.value) {
                                     NotificationLogic().checkForPermissions(context = this@MainActivity)
+                                    // Additional operations can be performed here as needed
+                                }
+                            }
+                            if (triggerGetTimersEffect.value) {
+                                LaunchedEffect(triggerGetTimersEffect.value) {
+                                    timerDatabase.getAllTimers()
+                                }
+                            }
+                            if (triggerDeleteAlarmEffect.value) {
+                                LaunchedEffect(triggerDeleteAlarmEffect.value) {
+                                    val timers = timerDatabase.getAllTimers()
+                                    timers.forEach {
+                                        timerFunc.cancelTimer(this@MainActivity, it)
+                                    }
+
+                                    timerDatabase.removeAllTimers()
+
                                     // Additional operations can be performed here as needed
                                 }
                             }
@@ -85,11 +115,10 @@ class MainActivity : ComponentActivity() {
                                     if(PermissionLogic().checkAlarmPermission(context = this@MainActivity))
                                     {
 
-                                        val currentTime = giveMeCurrentTime()
                                         val currentTimeInStringFormat = setUpCurrentTimeForAlarm()
 
-                                        val list = timerDatabase.getAllTimers()
-                                        timerDatabase.removeAllTimers()
+                                        //val list = timerDatabase.getAllTimers()
+                                        //timerDatabase.removeAllTimers()
 
                                         timerFunc.createTimer(
                                             initialTimerTime = currentTimeInStringFormat,
@@ -157,22 +186,22 @@ class MainActivity : ComponentActivity() {
 
     }
 
-    private fun giveMeCurrentTime(): String{
-        val currentTime = Date()
-        val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.ENGLISH)
-        val currentTimeInStringFormat = dateFormat.format(currentTime)
-        return currentTimeInStringFormat
+    private fun giveMeCurrentTime(): String {
+        val zonedDateTime = ZonedDateTime.now(ZoneId.of("Europe/Copenhagen"))
+        val dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
+        return zonedDateTime.format(dateTimeFormatter)
     }
 
     private fun setUpCurrentTimeForAlarm(): String {
         var currentTime = Date()
         val calendar = Calendar.getInstance()
         calendar.time = currentTime
-        calendar.add(Calendar.SECOND, 50)
+        calendar.add(Calendar.SECOND, 60)
         currentTime = calendar.time
         val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.ENGLISH)
         val currentTimeInStringFormat = dateFormat.format(currentTime)
-        return currentTimeInStringFormat
+        return "00:00:60"
+        //return currentTimeInStringFormat
     }
 }
 
