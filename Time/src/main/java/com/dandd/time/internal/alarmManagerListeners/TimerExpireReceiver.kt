@@ -13,8 +13,16 @@ import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.Dandd.time.R
+import com.dandd.time.domain.TimerProvider
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 
 class TimerExpiredReceiver : BroadcastReceiver() {
+
+    private val job = Job()
+    private val scope = CoroutineScope(Dispatchers.IO + job)
 
     companion object {
         const val TIMER_CHANNEL_ID = "10"
@@ -23,6 +31,10 @@ class TimerExpiredReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {
         createNotificationChannel(context)
+
+        val timerProvider by lazy { TimerProvider(context = context) }
+        val timerFunc by lazy { timerProvider.getTimerFunc() }
+        val timerDatabase by lazy { timerProvider.getTimerDB() }
 
         //val packageName = context.packageName
         //val metaData = context.packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA).metaData
@@ -52,15 +64,21 @@ class TimerExpiredReceiver : BroadcastReceiver() {
         val notificationId = timerId.hashCode()
 
         if (ActivityCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            /*val permissionIntent = Intent(context, PermissionRequestActivity::class.java).apply {
+            val permissionIntent = Intent(context, PermissionRequestActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                putExtra(PermissionRequestActivity.EXTRA_PERMISSIONS, arrayOf(Manifest.permission.POST_NOTIFICATIONS))
+                putExtra(PermissionRequestActivity.NOTIFICATION_PERMISSIONS, arrayOf(Manifest.permission.POST_NOTIFICATIONS))
             }
             context.startActivity(permissionIntent)
-            */
         } else {
             with(NotificationManagerCompat.from(context)) {
                 notify(notificationId, builder.build())
+            }
+            //TODO consider whether or not we want to cancel the alarm a different way?
+            //That is, how does it actually work? does the alarm manager remove the alarm
+            // completely and then its up to the UI to keep pinging the user?
+            scope.launch {
+                val timerEntity = timerDatabase.getTimerOnTimerId(timerId)
+                timerFunc.cancelTimer(context, timerEntity)
             }
         }
     }
