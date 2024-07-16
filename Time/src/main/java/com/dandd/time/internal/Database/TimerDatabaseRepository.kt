@@ -73,6 +73,15 @@ internal class TimerDatabaseRepository(private val database: TimerRoomDatabase):
         }
     }
 
+    override suspend fun getTimerOnTimerId(timerId: String): TimerEntity {
+        try {
+            return timerDao.getTimerOnTimerId(timerId)
+        } catch (e: Exception) {
+            val message = "a remove related error on remove all timers on timerId: $timerId happened, see exception: $e"
+            throw DatabaseOperationException(message, e)
+        }
+    }
+
     override suspend fun removeTimerOnAccountName(timerId: String, accountName: String) {
         try {
             timerDao.removeTimerOnAccountName(timerId, accountName)

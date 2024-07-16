@@ -20,7 +20,7 @@ internal interface TimerDao {
     suspend fun removeTimer(timer: TimerEntity): Int
 
     @Query("UPDATE TimerEntity SET remainingTime = :remainingTime, status = :isActive WHERE timerId = :timerId")
-    suspend fun updateTimer(remainingTime: Float, timerId: String, isActive: Int): Int
+    suspend fun updateTimer(remainingTime: Long, timerId: String, isActive: Int): Int
 
     @Query("Select * FROM timerEntity")
     suspend fun getAllTimers(): List<TimerEntity>
@@ -30,6 +30,9 @@ internal interface TimerDao {
 
     @Query("Select * FROM timerEntity WHERE accountName = :accountName")
     suspend fun getTimersOnAccountName(accountName: String): List<TimerEntity>
+
+    @Query("Select * FROM TimerEntity WHERE timerId = :timerId")
+    suspend fun getTimerOnTimerId(timerId: String) : TimerEntity
 
     @Query("Delete FROM timerEntity WHERE accountName = :accountName")
     suspend fun removeAllTimersOnAccountName(accountName: String): Int

@@ -9,6 +9,7 @@ interface ITimerDB {
     suspend fun getAllTimers(): List<TimerEntity>
     suspend fun removeAllTimers()
     suspend fun getTimersOnAccountName(accountName: String): List<TimerEntity>
+    suspend fun getTimerOnTimerId(timerId: String) : TimerEntity
     suspend fun removeAllTimersOnAccountName(accountName: String)
     suspend fun removeTimerOnAccountName(timerId: String, accountName: String)
 }
