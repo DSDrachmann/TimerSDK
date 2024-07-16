@@ -10,7 +10,7 @@
         <receiver android:name="com.dandd.time.internal.alarmManagerListeners.TimerExpiredReceiver" android:exported="false">
             <!-- If you have specific actions, add intent filters here -->
         </receiver>
-        <receiver android:name="com.dandd.time.internal.alarmManagerListeners.BootCompletedReceiver" android:exported="false">
+        <receiver android:name="com.dandd.time.internal.alarmManagerListeners.BootCompletedReceiver" android:enabled="true" android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
             </intent-filter>
