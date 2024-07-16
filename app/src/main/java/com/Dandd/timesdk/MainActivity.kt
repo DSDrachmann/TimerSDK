@@ -200,7 +200,7 @@ class MainActivity : ComponentActivity() {
         currentTime = calendar.time
         val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.ENGLISH)
         val currentTimeInStringFormat = dateFormat.format(currentTime)
-        return "00:00:60"
+        return "00:00:10"
         //return currentTimeInStringFormat
     }
 }
