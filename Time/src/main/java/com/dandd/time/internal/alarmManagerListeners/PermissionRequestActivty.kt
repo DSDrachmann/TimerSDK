@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import android.provider.Settings
 import android.widget.Toast
+import androidx.core.content.ContextCompat.startActivity
 
 class PermissionRequestActivity : AppCompatActivity() {
 
@@ -46,13 +47,7 @@ class PermissionRequestActivity : AppCompatActivity() {
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == EXACT_ALARM_PERMISSION_CODE) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Schedule Exact alarm Permission Granted", Toast.LENGTH_SHORT).show()
-            } else {
-                Toast.makeText(this, "Schedule Exact alarm Permission Denied", Toast.LENGTH_SHORT).show()
-            }
-        } else if (requestCode == NOTIFICATION_PERMISSION_CODE) {
+        if (requestCode == NOTIFICATION_PERMISSION_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 Toast.makeText(this, "Notification Permission Granted", Toast.LENGTH_SHORT).show()
             } else {
