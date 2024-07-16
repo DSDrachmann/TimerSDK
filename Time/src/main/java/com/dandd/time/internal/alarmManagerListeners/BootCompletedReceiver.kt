@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.util.Log
 import com.dandd.time.domain.model.TimerEntity
+import com.dandd.time.domain.model.TimerStatus
 import com.dandd.time.internal.Database.TimerDatabaseRepository
 import com.dandd.time.internal.Database.timerDatabaseProvider
 import kotlinx.coroutines.CoroutineScope
@@ -23,19 +24,24 @@ class BootCompletedReceiver : BroadcastReceiver() {
             // Reschedule alarms here
             Log.d("BootCompletedReceiver", "Device rebooted - rescheduling alarms...")
             // Example function call - replace with actual method to reschedule alarms
-            //rescheduleAlarms(context)
+            rescheduleTimers(context)
         }
     }
 
-    private fun rescheduleAlarms(context: Context?) {
+    private fun rescheduleTimers(context: Context?) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val allTimers = getTimerEntities(context)
+                //we only want to reschedule does that are marked as "active".
+                val allTimers = getTimerEntities(context)?.filter { it.status == TimerStatus.ACTIVE.rawValue }
 
-                allTimers?.forEach { timer ->
-                    val pendingIntent = getPendingIntent(context, timer)
-                    //force unwrapping the "context is safe", here because the context is not null
-                    setAlarmInAlarmManager(context!!, timer, pendingIntent)
+                if(context != null) //i don't expect the context to be null, but just precaution.
+                {
+                    allTimers?.forEach { timer ->
+                        val epochTimeForAlarmManager = timer.initialDateForSettingTimerInEpoch + (timer.remainingTime*1000)
+                        Log.i("BootCompletedReciever", "time for AlarmManager is: $epochTimeForAlarmManager")
+                        val pendingIntent = getPendingIntent(context, timer)
+                        setTimerInAlarmManagerWhenReschedulingAfterReboot(context, epochTimeForAlarmManager, pendingIntent)
+                    }
                 }
             } catch (e: Exception) {
                 Log.e("BootCompletedReceiver", "Error rescheduling alarms: ${e.message}")
@@ -46,13 +52,13 @@ class BootCompletedReceiver : BroadcastReceiver() {
     private suspend fun getTimerEntities(context: Context?): List<TimerEntity>? {
         val database = context?.let { timerDatabaseProvider.getInstance(it) }
             ?.let { TimerDatabaseRepository(it) }
-        val allTimers = database?.getAllTimers()?.filter { it.status == 2 }
+        val allTimers = database?.getAllTimers()?.filter { it.status == TimerStatus.ACTIVE.rawValue }
         return allTimers
     }
 
-    private fun setAlarmInAlarmManager(
+    private fun setTimerInAlarmManagerWhenReschedulingAfterReboot(
         context: Context,
-        timer: TimerEntity,
+        epochTimeForAlarmManager: Long,
         pendingIntent: PendingIntent
     ) {
         //get the alarmManager
@@ -61,7 +67,7 @@ class BootCompletedReceiver : BroadcastReceiver() {
         //set the alarm using the setExactAndAllowWhileIdle option
         alarmManager.setExactAndAllowWhileIdle(
             AlarmManager.RTC_WAKEUP,
-            (System.currentTimeMillis() + timer.remainingTime).toLong(),
+            epochTimeForAlarmManager,
             pendingIntent
         )
     }
