@@ -4,12 +4,7 @@ import android.Manifest
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import androidx.core.app.ActivityCompat
-import com.dandd.time.internal.alarmManagerListeners.PermissionRequestActivity
-import android.content.BroadcastReceiver
-import android.content.IntentFilter
-import android.os.Build
-import android.provider.Settings
+import com.dandd.time.internal.Permissions.PermissionRequestActivity
 import androidx.core.content.ContextCompat
 
 

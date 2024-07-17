@@ -6,7 +6,7 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
     <application>
-        <activity android:name="com.dandd.time.internal.alarmManagerListeners.PermissionRequestActivity" android:theme="@style/Theme.AppCompat.Dialog.Alert"/>
+        <activity android:name="com.dandd.time.internal.Permissions.PermissionRequestActivity" android:theme="@style/Theme.AppCompat.Dialog.Alert"/>
         <receiver android:name="com.dandd.time.internal.alarmManagerListeners.TimerExpiredReceiver" android:exported="true">
             <!-- If you have specific actions, add intent filters here -->
         </receiver>

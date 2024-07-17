@@ -34,4 +34,8 @@ interface ITimer {
     suspend fun pauseTimer(context: Context, timerEntity: TimerEntity)
 
     suspend fun reActivateTimer(context: Context, timerEntity: TimerEntity)
+
+    suspend fun deleteTimer(context: Context, timerEntity: TimerEntity)
+    suspend fun shutDownOrDestroyOrGoIntoBackground()
+    suspend fun deleteAllTimers(context: Context)
 }

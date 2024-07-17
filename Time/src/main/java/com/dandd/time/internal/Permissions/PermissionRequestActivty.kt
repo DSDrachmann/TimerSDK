@@ -1,4 +1,4 @@
-package com.dandd.time.internal.alarmManagerListeners
+package com.dandd.time.internal.Permissions
 
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,7 +9,6 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import android.provider.Settings
 import android.widget.Toast
-import androidx.core.content.ContextCompat.startActivity
 
 class PermissionRequestActivity : AppCompatActivity() {
 

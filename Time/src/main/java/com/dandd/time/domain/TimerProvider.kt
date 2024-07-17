@@ -1,7 +1,7 @@
 package com.dandd.time.domain
 
 import android.content.Context
-import com.dandd.time.internal.ExtraFunctionality
+import com.dandd.time.internal.TimerFunctionality
 import com.dandd.time.internal.Database.TimerDatabaseRepository
 import com.dandd.time.internal.Database.TimerRoomDatabase
 import com.dandd.time.internal.Database.timerDatabaseProvider
@@ -15,6 +15,6 @@ class TimerProvider(context: Context) {
     }
 
     fun getTimerFunc(): ITimer {
-        return ExtraFunctionality(timerDB)
+        return TimerFunctionality(timerDB)
     }
 }

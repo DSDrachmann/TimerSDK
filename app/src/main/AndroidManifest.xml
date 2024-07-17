@@ -16,7 +16,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TimeSDK"
         tools:targetApi="31">
-        <activity android:name="com.dandd.time.internal.alarmManagerListeners.PermissionRequestActivity" android:theme="@style/Theme.AppCompat.Dialog.Alert"/>
+        <activity android:name="com.dandd.time.internal.Permissions.PermissionRequestActivity" android:theme="@style/Theme.AppCompat.Dialog.Alert"/>
 
         <receiver android:name="com.dandd.time.internal.alarmManagerListeners.TimerExpiredReceiver" android:enabled="true" android:exported="true">
             <!-- If you have specific actions, add intent filters here -->
