@@ -20,5 +20,5 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "TimeSDK"
-include(":app")
+//include(":app")
 include(":Time")
