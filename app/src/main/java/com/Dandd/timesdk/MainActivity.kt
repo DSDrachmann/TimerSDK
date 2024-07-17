@@ -19,11 +19,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.lifecycleScope
 import com.dandd.time.domain.TimerProvider
 import com.dandd.time.domain.model.TimerStatus
 import com.dandd.time.internal.Permissions.PermissionLogic
 import com.dandd.time.internal.notificationActivity.NotificationLogic
 import com.dandd.timesdk.ui.theme.TimeSDKTheme
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -172,36 +176,25 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        lifecycleScope.launch {
+            timerFunc.shutDownOrDestroyOrGoIntoBackground()
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        lifecycleScope.launch {
+            timerFunc.shutDownOrDestroyOrGoIntoBackground()
+        }
     }
 
     override fun onRestart() {
         super.onRestart()
-    }
-
-    private fun updateAlarmsInDatabase() {
-
-    }
-
-    private fun giveMeCurrentTime(): String {
-        val zonedDateTime = ZonedDateTime.now(ZoneId.of("Europe/Copenhagen"))
-        val dateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss")
-        return zonedDateTime.format(dateTimeFormatter)
+        //Not sure i want to do anything when it comes to this part.
     }
 
     private fun setUpCurrentTimeForAlarm(): String {
-        var currentTime = Date()
-        val calendar = Calendar.getInstance()
-        calendar.time = currentTime
-        calendar.add(Calendar.SECOND, 60)
-        currentTime = calendar.time
-        val dateFormat = SimpleDateFormat("HH:mm:ss", Locale.ENGLISH)
-        val currentTimeInStringFormat = dateFormat.format(currentTime)
-        return "00:00:10"
-        //return currentTimeInStringFormat
+        return "00:00:60"
     }
 }
 
