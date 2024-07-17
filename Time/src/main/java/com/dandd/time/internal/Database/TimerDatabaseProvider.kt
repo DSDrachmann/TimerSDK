@@ -1,12 +1,11 @@
-package com.dandd.time.domain
+package com.dandd.time.internal.Database
 
 import android.content.Context
 import androidx.room.Room
-import com.dandd.time.internal.TimerRoomDatabase
 
 //this provides the database, that is, it creates it and returns it.
 //this is the first class you create when you want to instantiate the method
-object timerDatabaseProvider {
+internal object timerDatabaseProvider {
     private var instance: TimerRoomDatabase? = null
 
     fun getInstance(context: Context): TimerRoomDatabase {

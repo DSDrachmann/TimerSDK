@@ -1,4 +1,4 @@
-package com.Dandd.timesdk.ui.theme
+package com.dandd.timesdk.ui.theme
 
 import android.app.Activity
 import android.os.Build

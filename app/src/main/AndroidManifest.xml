@@ -2,6 +2,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,10 +16,19 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.TimeSDK"
         tools:targetApi="31">
+        <activity android:name="com.dandd.time.internal.Permissions.PermissionRequestActivity" android:theme="@style/Theme.AppCompat.Dialog.Alert"/>
+
+        <receiver android:name="com.dandd.time.internal.alarmManagerListeners.TimerExpiredReceiver" android:enabled="true" android:exported="true">
+            <!-- If you have specific actions, add intent filters here -->
+        </receiver>
+        <receiver android:name="com.dandd.time.internal.alarmManagerListeners.BootCompletedReceiver" android:enabled="true" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver>
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.TimeSDK">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

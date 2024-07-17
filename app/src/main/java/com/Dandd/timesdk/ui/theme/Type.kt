@@ -1,4 +1,4 @@
-package com.Dandd.timesdk.ui.theme
+package com.dandd.timesdk.ui.theme
 
 import androidx.compose.material3.Typography
 import androidx.compose.ui.text.TextStyle

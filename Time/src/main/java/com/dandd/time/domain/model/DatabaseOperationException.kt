@@ -1,4 +1,4 @@
-package com.dandd.time.domain
+package com.dandd.time.domain.model
 /**
  * Exception thrown when an operation on the database fails.
  */
