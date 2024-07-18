@@ -8,7 +8,7 @@ plugins {
 val releaseVersion = "0.0.1"
 val artifactIdentification = "dandamon-time"
 val githubOwner = "DSDrachmann"
-val githubProjectName = "TimeSDK"
+val githubProjectName = "TimerSDK"
 
 android {
     namespace = "com.Dandd.time"
