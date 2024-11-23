@@ -11,6 +11,8 @@ interface ITimer {
      */
     fun startLoopCoroutine(coroutineScope: CoroutineScope, loopDelay: Int, oneLoopDoneUnit: () -> Unit)
 
+    suspend fun getTimers(accountName: String): List<TimerEntity>
+
     /**
      * This is for UI, it cancels the timer.
      */
