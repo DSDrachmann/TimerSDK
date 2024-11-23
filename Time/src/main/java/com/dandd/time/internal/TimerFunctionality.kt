@@ -43,20 +43,20 @@ internal class TimerFunctionality(
 
     override suspend fun getTimers(accountName: String): List<TimerEntity> {
         val timers = timerDatabaseAccess.getAllTimers()
-        var correctTimers: MutableList<TimerEntity> = mutableListOf()
+/*        var correctTimers: MutableList<TimerEntity> = mutableListOf()
         timers.forEach {
             if (it.status == TimerStatus.ACTIVE.rawValue) {
                 val remainingTime = getNewTimeForUpdateField(it)
-                val updatedTimerEntity: TimerEntity = it.copy(
+               val updatedTimerEntity: TimerEntity = it.copy(
                     remainingTime = remainingTime,
                 )
                 correctTimers.add(updatedTimerEntity)
             }
-            else {
+          else {
                 correctTimers.add(it)
             }
-        }
-        return correctTimers
+        }*/
+        return timers
     }
 
     /**
