@@ -99,7 +99,8 @@ class MainActivity : ComponentActivity() {
                             }
                             if (triggerGetTimersEffect.value) {
                                 LaunchedEffect(triggerGetTimersEffect.value) {
-                                    timerDatabase.getAllTimers()
+                                    var result = timerFunc.getTimers("Dan")
+                                    print("")
                                 }
                             }
                             if (triggerDeleteAlarmEffect.value) {

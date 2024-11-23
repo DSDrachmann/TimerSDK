@@ -41,6 +41,24 @@ internal class TimerFunctionality(
         coroutineScope.coroutineContext.cancel()
     }
 
+    override suspend fun getTimers(accountName: String): List<TimerEntity> {
+        val timers = timerDatabaseAccess.getAllTimers()
+        var correctTimers: MutableList<TimerEntity> = mutableListOf()
+        timers.forEach {
+            if (it.status == TimerStatus.ACTIVE.rawValue) {
+                val remainingTime = getNewTimeForUpdateField(it)
+                val updatedTimerEntity: TimerEntity = it.copy(
+                    remainingTime = remainingTime,
+                )
+                correctTimers.add(updatedTimerEntity)
+            }
+            else {
+                correctTimers.add(it)
+            }
+        }
+        return correctTimers
+    }
+
     /**
      * Create a timer with the given initial value.
      * @param initialTimerTime The initial value of the timer in hh:mm:ss format.
