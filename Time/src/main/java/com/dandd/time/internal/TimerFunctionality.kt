@@ -91,7 +91,8 @@ internal class TimerFunctionality(
         val epochTimeForAlarmManager = getEpochTime() + (timerEntity.remainingTime*1000)
 
         val updatedTimerForDatabase: TimerEntity = timerEntity.copy(
-            status = TimerStatus.ACTIVE.rawValue
+            status = TimerStatus.ACTIVE.rawValue,
+            initialDateForSettingTimerInEpoch = getEpochTime()
         )
 
         val pendingIntent = getPendingIntent(context, timerEntity)
@@ -123,7 +124,8 @@ internal class TimerFunctionality(
      */
     override suspend fun cancelTimer(context: Context, timerEntity: TimerEntity) {
         val updatedTimerEntity: TimerEntity = timerEntity.copy(
-            remainingTime = timerEntity.initialValue, status = TimerStatus.INACTIVE.rawValue
+            remainingTime = timerEntity.initialValue,
+            status = TimerStatus.INACTIVE.rawValue
         )
 
         val pendingIntent = getPendingIntent(context, updatedTimerEntity)
