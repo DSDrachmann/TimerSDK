@@ -5,7 +5,8 @@ plugins {
     kotlin("kapt")
 }
 
-val releaseVersion = "0.0.2"
+
+val releaseVersion = "0.0.3"
 val artifactIdentification = "dandamon-time"
 val githubOwner = "DSDrachmann"
 val githubProjectName = "TimerSDK"
