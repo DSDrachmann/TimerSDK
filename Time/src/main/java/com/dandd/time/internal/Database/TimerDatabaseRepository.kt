@@ -30,7 +30,7 @@ internal class TimerDatabaseRepository(private val database: TimerRoomDatabase):
 
     override suspend fun updateTimer(item: TimerEntity) {
         try {
-            timerDao.updateTimer(remainingTime = item.remainingTime, timerId = item.timerId, isActive = item.status)
+            timerDao.updateTimer(remainingTime = item.remainingTime, timerId = item.timerId, isActive = item.status, epochTime = item.initialDateForSettingTimerInEpoch)
         } catch (e: Exception) {
             val message = "an update related error on set a timer happened, see exception: $e, it happened on timerId: ${item.timerId} and initialValue: ${item.initialValue} and remainingTime: ${item.remainingTime}"
             throw DatabaseOperationException(message, e)

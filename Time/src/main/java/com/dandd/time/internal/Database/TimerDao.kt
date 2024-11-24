@@ -19,8 +19,8 @@ internal interface TimerDao {
     @Delete
     suspend fun removeTimer(timer: TimerEntity): Int
 
-    @Query("UPDATE TimerEntity SET remainingTime = :remainingTime, status = :isActive WHERE timerId = :timerId")
-    suspend fun updateTimer(remainingTime: Long, timerId: String, isActive: Int): Int
+    @Query("UPDATE TimerEntity SET remainingTime = :remainingTime, status = :isActive, initialDateForSettingTimerInEpoch = :epochTime WHERE timerId = :timerId")
+    suspend fun updateTimer(remainingTime: Long, timerId: String, isActive: Int, epochTime: Long): Int
 
     @Query("Select * FROM timerEntity")
     suspend fun getAllTimers(): List<TimerEntity>

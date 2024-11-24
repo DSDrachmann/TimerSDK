@@ -4,7 +4,7 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import com.dandd.time.domain.model.TimerEntity
 
-@Database(entities = [TimerEntity::class], version = 6, exportSchema = false)
+@Database(entities = [TimerEntity::class], version = 7, exportSchema = false)
 internal abstract class TimerRoomDatabase: RoomDatabase() {
     abstract fun timerItemDao(): TimerDao
 }
