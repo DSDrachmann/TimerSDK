@@ -47,7 +47,7 @@ internal class TimerFunctionality(
         var correctTimers: MutableList<TimerEntity> = mutableListOf()
 
         for (timer in timers) {
-            if(timer.initialDateForSettingTimerInEpoch < getEpochTime() + (timer.initialValue * 1000)) {
+            if(timer.initialDateForSettingTimerInEpoch < getEpochTime() + (timer.initialValue * 1000) && timer.status != TimerStatus.ACTIVE.rawValue) {
                 val preparedTimer: TimerEntity = timer.copy(
                     initialDateForSettingTimerInEpoch = getEpochTime()
                 )
@@ -70,7 +70,7 @@ internal class TimerFunctionality(
                 correctTimers.add(it)
             }
         }
-        return timers
+        return correctTimers
     }
 
     /**
