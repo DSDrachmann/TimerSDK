@@ -5,7 +5,7 @@ plugins {
     kotlin("kapt")
 }
 
-val releaseVersion = "0.0.5"
+val releaseVersion = "0.0.6"
 val artifactIdentification = "dandamon-time"
 val githubOwner = "DSDrachmann"
 val githubProjectName = "TimerSDK"
@@ -15,7 +15,7 @@ android {
     compileSdk = 34
 
     defaultConfig {
-        minSdk = 33
+        minSdk = 31
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
